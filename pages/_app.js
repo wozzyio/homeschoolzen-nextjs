@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 import App from "next/app";
 import Head from "next/head";
 import Router from "next/router";
+import { AuthUserProvider } from '../firebase/authUserContext';
+
 
 import PageChange from "components/PageChange/PageChange.js";
 
@@ -65,17 +67,19 @@ export default class MyApp extends App {
 
     return (
       <React.Fragment>
-        <Head>
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, shrink-to-fit=no"
-          />
-          <title>Notus NextJS by Creative Tim</title>
-          <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
-        </Head>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
+        <AuthUserProvider>
+          <Head>
+            <meta
+              name="viewport"
+              content="width=device-width, initial-scale=1, shrink-to-fit=no"
+            />
+            <title>Notus NextJS by Creative Tim</title>
+            <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
+          </Head>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </AuthUserProvider>
       </React.Fragment>
     );
   }
