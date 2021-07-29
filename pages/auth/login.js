@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import { useRouter } from 'next/router'
 import Auth from "layouts/Auth.js";
 import { useAuth } from "firebase/authUserContext"
+import Firebase from "../../firebase/clientApp";
 
 const schema = yup.object().shape({
   email: yup.string().required().email(),
@@ -15,16 +16,47 @@ const schema = yup.object().shape({
 
 // layout for page
 export default function Login() {
-  const { signInWithEmailAndPassword } = useAuth();
+  const db = Firebase.firestore();
+  const { signInWithEmailAndPassword, setUserDocument } = useAuth();
   const router = useRouter()
   const { register, handleSubmit, formState: { errors, isSubmitting }, setError} = useForm({
     resolver: yupResolver(schema),
   });
 
+  const getUserDocData = async (user) => {
+    db.collection("users").doc(user.uid).get().then((doc) => {
+      if (doc.exists) {
+        console.log("Document data:", doc.data());
+        return doc.data();
+      } else {
+        // doc.data() will be undefined in this case
+        throw new Error('NO_DOCUMENT_FOUND');
+      }
+    }).catch(() => {
+      throw new Error('ERROR_GETTING_DOCUMENT');
+    });
+  };
+
   const onSubmit = (data) => {
+    // TODO: check here if the user is actually a teacher type of is a student type
+    // TODO: push to different dashboard depending on which type of user it actually is
     signInWithEmailAndPassword(data.email, data.password)
-        .then(authUser => {
-          router.push('/admin/dashboard');
+          .then(authUser => {
+            try {
+              console.log(authUser.user.uid)
+              let userDocData = getUserDocData(authUser.user)
+              setUserDocument(userDocData)
+              if(userDocData.userType === "teacher"){
+                router.push('/admin/dashboard');
+              } else if(userDocData.userType === "student"){
+                router.push('/student/dashboard');
+              }
+            } catch (e) {
+              setError("server", {
+                type: "manual",
+                message: "We're experiencing an issue logging in currently",
+              });
+            }
         })
         .catch(error => {
           setError("server", {
