@@ -59,6 +59,7 @@ export default function Login() {
             }
         })
         .catch(error => {
+          console.log(error);
           setError("server", {
             type: "manual",
             message: "Email/Password combination invalid",

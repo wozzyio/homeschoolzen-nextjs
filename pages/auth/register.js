@@ -122,10 +122,17 @@ export default function Register() {
       setTimeout(resolve, ms);
     });
     await sleep(2000);
-    let authUser = await createUserWithEmailAndPassword(data.email, data.password);
-    await sleep(1000);
-    await addThings(authUser, "teacher");
-    await sleep(1000);
+    try {
+      let authUser = await createUserWithEmailAndPassword(data.email, data.password);
+      await sleep(1000);
+      await addThings(authUser, "teacher");
+      await sleep(1000);
+    } catch (err) {
+      setError("server", {
+        type: "manual",
+        message: err.message,
+      });
+    }
     // let a = createUserWithEmailAndPassword(data.email, data.password);
     // let b = a.then(function(resultA) {
     //   // some processing
