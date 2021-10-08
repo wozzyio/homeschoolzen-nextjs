@@ -47,21 +47,21 @@ export default function useFirebaseAuth() {
     const signOut = () =>
         setUserDoc(null)
         Firebase.auth().signOut().then(clear);
-
-    const addTeacherDocument = (email, password) => {
-        Firebase.auth().createUserWithEmailAndPassword(email, password).then((user) => {
-            console.log(user);
-            Firebase.firestore().collection("users").doc(user.user.uid).set({
-                uid: user.user.uid,
-                displayName: user.user.displayName,
-                photoURL: user.user.photoURL,
-                email: user.user.email,
-                emailVerified: user.user.emailVerified,
-                isNewUser: user.additionalUserInfo.isNewUser,
-                userType: "teacher",
-            });
-        })
+    
+    const addTeacherDocument = (user) => {
+        Firebase.firestore().collection("users").doc(user.user.uid).set({
+            uid: user.user.uid,
+            displayName: user.user.displayName,
+            photoURL: user.user.photoURL,
+            email: user.user.email,
+            emailVerified: user.user.emailVerified,
+            isNewUser: user.additionalUserInfo.isNewUser,
+            userType: "teacher",
+        });
     };
+
+    const getUserDocData = (user) =>
+        Firebase.firestore().collection("users").doc(user.uid).get();
 
     useEffect(() => {
         const unsubscribe = Firebase.auth().onAuthStateChanged(authStateChanged);
@@ -77,6 +77,7 @@ export default function useFirebaseAuth() {
         signOut,
         setUserDocument,
         addTeacherDocument,
+        getUserDocData,
     };
 
     return {

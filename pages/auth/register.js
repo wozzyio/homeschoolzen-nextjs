@@ -34,26 +34,25 @@ async function someAsync() {
 
 export default function Register() {
   const db = Firebase.firestore();
-  const { createUserWithEmailAndPassword, setUserDocument, addTeacherDocument } = useAuth();
-  // const { addTeacherDocument } = useFireStore();
+  const { createUserWithEmailAndPassword, setUserDocument, addTeacherDocument, getUserDocData } = useAuth();
   const router = useRouter()
   const { register, handleSubmit, formState: { errors, isSubmitting }, setError} = useForm({
     resolver: yupResolver(schema),
   });
 
-  const addThings = async (user, userType) => {
-    // TODO: store this in a global react hook store for easy access across pages
-    console.log(user);
-    console.log(userType);
-    await db.collection("users").doc(user.user.uid).set({
-      uid: user.user.uid,
-      displayName: user.user.displayName,
-      photoURL: user.user.photoURL,
-      email: user.user.email,
-      emailVerified: user.user.emailVerified,
-      isNewUser: user.additionalUserInfo.isNewUser,
-      userType: userType,
-    });
+  // const addThings = async (user, userType) => {
+  //   // TODO: store this in a global react hook store for easy access across pages
+  //   console.log(user);
+  //   console.log(userType);
+  //   await db.collection("users").doc(user.user.uid).set({
+  //     uid: user.user.uid,
+  //     displayName: user.user.displayName,
+  //     photoURL: user.user.photoURL,
+  //     email: user.user.email,
+  //     emailVerified: user.user.emailVerified,
+  //     isNewUser: user.additionalUserInfo.isNewUser,
+  //     userType: userType,
+  //   });
     // await db.collection("users").doc(user.user.uid).set({
     //   uid: user.user.uid,
     //   displayName: user.user.displayName,
@@ -88,7 +87,7 @@ export default function Register() {
     //   console.log("In error thingy");
     //   console.log(e);
     // }
-  };
+  // };
 
   // const addTeacherDocument = (user, userType) => {
   //   db.collection("users").doc(user.user.uid).set({
@@ -101,6 +100,18 @@ export default function Register() {
   //     userType: userType,
   //   });
   // };
+
+  const sleep = ms => new Promise(resolve => {
+    console.log("sleeping.......: " + ms);
+    setTimeout(resolve, ms);
+  });
+
+  const setServerManualError = (msg) => {
+    setError("server", {
+      type: "manual",
+      message: "Something went wrong on our end",
+    });
+  }
 
   const onSubmit = async (data) => {
     // HACK works for now!!
@@ -117,17 +128,48 @@ export default function Register() {
     // }
     // await setUserDocument(userDocData);
     // router.push('/admin/dashboard');
-    const sleep = ms => new Promise(resolve => {
-      console.log("sleeping.......: " + ms);
-      setTimeout(resolve, ms);
-    });
-    await sleep(2000);
+    // await sleep(1000);
     try {
       let authUser = await createUserWithEmailAndPassword(data.email, data.password);
       await sleep(1000);
-      await addThings(authUser, "teacher");
+      try {
+        await addTeacherDocument(authUser);
+        await sleep(2000);
+        // get the user data
+        try {
+          let userDoc = await getUserDocData(authUser.user);
+          let userDocData = userDoc.data();
+          console.log(JSON.stringify((userDocData)));
+          await sleep(1000);
+          try {
+            await setUserDocument(userDocData);
+            router.push('/admin/dashboard');
+          } catch (err) {
+            console.log(err);
+            setError("server", {
+              type: "manual",
+              message: "Something went wrong on our end",
+            });
+          }
+        } catch (err) {
+          console.log(err);
+          setError("server", {
+            type: "manual",
+            message: "Something went wrong on our end",
+          });
+        }
+      } catch (err) {
+        console.log(err);
+        setError("server", {
+          type: "manual",
+          message: "Something went wrong on our end",
+        });
+      }
+      //await addThings(authUser, "teacher");
+      console.log(JSON.stringify(authUser));
       await sleep(1000);
     } catch (err) {
+      console.log("In the error part now");
       setError("server", {
         type: "manual",
         message: err.message,
