@@ -34,84 +34,32 @@ async function someAsync() {
 
 export default function Register() {
   const db = Firebase.firestore();
-  const { createUserWithEmailAndPassword, setUserDocument, addTeacherDocument, getUserDocData } = useAuth();
+  const { createUserWithEmailAndPassword, setUserDocument, signInWithEmailAndPassword } = useAuth();
+  // const { addTeacherDocument } = useFireStore();
   const router = useRouter()
   const { register, handleSubmit, formState: { errors, isSubmitting }, setError} = useForm({
     resolver: yupResolver(schema),
   });
 
-  // const addThings = async (user, userType) => {
-  //   // TODO: store this in a global react hook store for easy access across pages
-  //   console.log(user);
-  //   console.log(userType);
-  //   await db.collection("users").doc(user.user.uid).set({
-  //     uid: user.user.uid,
-  //     displayName: user.user.displayName,
-  //     photoURL: user.user.photoURL,
-  //     email: user.user.email,
-  //     emailVerified: user.user.emailVerified,
-  //     isNewUser: user.additionalUserInfo.isNewUser,
-  //     userType: userType,
-  //   });
-    // await db.collection("users").doc(user.user.uid).set({
-    //   uid: user.user.uid,
-    //   displayName: user.user.displayName,
-    //   photoURL: user.user.photoURL,
-    //   email: user.user.email,
-    //   emailVerified: user.user.emailVerified,
-    //   isNewUser: user.additionalUserInfo.isNewUser,
-    //   userType: userType,
-    // });
-    // console.log("do i at least make it this far....");
-    // await db.collection("poop").doc(user.user.uid).set({
-    //   uid: user.user.uid,
-    //   displayName: user.user.displayName,
-    //   photoURL: user.user.photoURL,
-    //   email: user.user.email,
-    //   emailVerified: user.user.emailVerified,
-    //   isNewUser: user.additionalUserInfo.isNewUser,
-    //   userType: userType,
-    // });
-    // console.log("made it past the db set call");
-    // try {
-    //   await db.collection("poop").doc(user.user.uid).set({
-    //     uid: user.user.uid,
-    //     displayName: user.user.displayName,
-    //     photoURL: user.user.photoURL,
-    //     email: user.user.email,
-    //     emailVerified: user.user.emailVerified,
-    //     isNewUser: user.additionalUserInfo.isNewUser,
-    //     userType: userType,
-    //   });
-    // } catch(e) {
-    //   console.log("In error thingy");
-    //   console.log(e);
-    // }
-  // };
-
-  // const addTeacherDocument = (user, userType) => {
-  //   db.collection("users").doc(user.user.uid).set({
-  //     uid: user.user.uid,
-  //     displayName: user.user.displayName,
-  //     photoURL: user.user.photoURL,
-  //     email: user.user.email,
-  //     emailVerified: user.user.emailVerified,
-  //     isNewUser: user.additionalUserInfo.isNewUser,
-  //     userType: userType,
-  //   });
-  // };
+  const setUserDocLocally = async (user, userType) => {
+    // TODO: store this in a global react hook store for easy access across pages
+    console.log(user);
+    console.log(userType);
+    await db.collection("users").doc(user.user.uid).set({
+      uid: user.user.uid,
+      displayName: user.user.displayName,
+      photoURL: user.user.photoURL,
+      email: user.user.email,
+      emailVerified: user.user.emailVerified,
+      isNewUser: user.additionalUserInfo.isNewUser,
+      userType: userType,
+    });
+  };
 
   const sleep = ms => new Promise(resolve => {
     console.log("sleeping.......: " + ms);
     setTimeout(resolve, ms);
   });
-
-  const setServerManualError = (msg) => {
-    setError("server", {
-      type: "manual",
-      message: "Something went wrong on our end",
-    });
-  }
 
   const onSubmit = async (data) => {
     // HACK works for now!!
@@ -128,48 +76,28 @@ export default function Register() {
     // }
     // await setUserDocument(userDocData);
     // router.push('/admin/dashboard');
-    // await sleep(1000);
+    await sleep(2000);
     try {
       let authUser = await createUserWithEmailAndPassword(data.email, data.password);
       await sleep(1000);
-      try {
-        await addTeacherDocument(authUser);
-        await sleep(2000);
-        // get the user data
-        try {
-          let userDoc = await getUserDocData(authUser.user);
-          let userDocData = userDoc.data();
-          console.log(JSON.stringify((userDocData)));
-          await sleep(1000);
-          try {
-            await setUserDocument(userDocData);
-            router.push('/admin/dashboard');
-          } catch (err) {
-            console.log(err);
-            setError("server", {
-              type: "manual",
-              message: "Something went wrong on our end",
-            });
-          }
-        } catch (err) {
-          console.log(err);
-          setError("server", {
-            type: "manual",
-            message: "Something went wrong on our end",
-          });
-        }
-      } catch (err) {
-        console.log(err);
-        setError("server", {
-          type: "manual",
-          message: "Something went wrong on our end",
-        });
-      }
-      //await addThings(authUser, "teacher");
-      console.log(JSON.stringify(authUser));
+      // set user doc local as in local to this file as far as the function is concered
+      await setUserDocLocally(authUser, "teacher");
       await sleep(1000);
+      await signInWithEmailAndPassword(data.email, data.password);
+      // set userDoc in global storage
+      let userDoc = {
+        uid: authUser.user.uid,
+        displayName: authUser.user.displayName,
+        photoURL: authUser.user.photoURL,
+        email: authUser.user.email,
+        emailVerified: authUser.user.emailVerified,
+        isNewUser: authUser.additionalUserInfo.isNewUser,
+        userType: "teacher",
+      }
+      await setUserDocument(userDoc);
+      // move forward to the dashboard
+      router.push('/admin/dashboard');
     } catch (err) {
-      console.log("In the error part now");
       setError("server", {
         type: "manual",
         message: err.message,

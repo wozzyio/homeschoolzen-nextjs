@@ -12,6 +12,8 @@ export default function useFirebaseAuth() {
     const [userDoc, setUserDoc] = useState(null);
 
     const authStateChanged = async (authState) => {
+        console.log("innn authStateChanged");
+        console.log(authState);
         if (!authState) {
             setAuthUser(null)
             setLoading(false)
@@ -27,7 +29,7 @@ export default function useFirebaseAuth() {
 // listen for Firebase state change
     useEffect(() => {
         const unsubscribe = Firebase.auth().onAuthStateChanged(authStateChanged);
-        return () => unsubscribe();
+        return unsubscribe;
     }, []);
 
     const clear = () => {

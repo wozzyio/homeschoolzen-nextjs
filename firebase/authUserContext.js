@@ -9,6 +9,7 @@ const authUserContext = createContext({
     createUserWithEmailAndPassword: async () => {},
     signOut: async () => {},
     setUserDocument : async () => {},
+    getUserDocData : async () => {},
     addTeacherDocument : async () => {},
 });
 
