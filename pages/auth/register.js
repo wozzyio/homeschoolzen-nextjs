@@ -93,6 +93,7 @@ export default function Register() {
         emailVerified: authUser.user.emailVerified,
         isNewUser: authUser.additionalUserInfo.isNewUser,
         userType: "teacher",
+        studentUid: [],
       }
       await setUserDocument(userDoc);
       // move forward to the dashboard

@@ -24,7 +24,7 @@ export default function Login() {
   });
 
   const getUserDocData = async (user) => {
-    db.collection("users").doc(user.uid).get().then((doc) => {
+    return db.collection("users").doc(user.uid).get().then((doc) => {
       if (doc.exists) {
         console.log("Document data:", doc.data());
         return doc.data();
@@ -37,35 +37,84 @@ export default function Login() {
     });
   };
 
-  const onSubmit = (data) => {
-    // TODO: check here if the user is actually a teacher type of is a student type
-    // TODO: push to different dashboard depending on which type of user it actually is
-    signInWithEmailAndPassword(data.email, data.password)
-          .then(authUser => {
-            try {
-              console.log(authUser.user.uid)
-              let userDocData = getUserDocData(authUser.user)
-              setUserDocument(userDocData)
-              if(userDocData.userType === "teacher"){
-                router.push('/admin/dashboard');
-              } else if(userDocData.userType === "student"){
-                router.push('/student/dashboard');
-              }
-            } catch (e) {
-              setError("server", {
-                type: "manual",
-                message: "We're experiencing an issue logging in currently",
-              });
-            }
-        })
-        .catch(error => {
-          console.log(error);
-          setError("server", {
-            type: "manual",
-            message: "Email/Password combination invalid",
-          });
-        });
+  const sleep = ms => new Promise(resolve => {
+    console.log("sleeping.......: " + ms);
+    setTimeout(resolve, ms);
+  });
+
+  const onSubmit = async (data) => {
+    await sleep(2000);
+    try {
+      let authUser = await signInWithEmailAndPassword(data.email, data.password);
+      console.log("authUser: "+ authUser);
+      await sleep(2000);
+      // set user doc local as in local to this file as far as the function is concered
+      let userDocData = await getUserDocData(authUser.user)
+      await sleep(1000);
+      // set userDoc in global storage
+      await setUserDocument(userDocData);
+      // move forward to the dashboard
+      console.log("userDocData: "+ userDocData);
+      console.log("userDocData.userType: " + userDocData.userType);
+      if(userDocData.userType === "teacher"){
+        router.push('/admin/dashboard');
+      } else if(userDocData.userType === "student"){
+        router.push('/student/dashboard');
+      }
+    } catch (err) {
+      setError("server", {
+        type: "manual",
+        message: err.message,
+      });
+    }
   }
+
+  // const onSubmit = async (data) => {
+  //   // TODO: check here if the user is actually a teacher type of is a student type
+  //   // TODO: push to different dashboard depending on which type of user it actually is
+  //   signInWithEmailAndPassword(data.email, data.password)
+  //         .then(authUser => {
+  //           console.log("authUser: " + authUser);
+  //           getUserDocData(authUser.user).then(userDocData => {
+  //             console.log("userDocData: " + userDocData);
+  //             console.log("userDocData.userType " + userDocData.userType);
+  //             setUserDocument(userDocData);
+  //             if(userDocData.userType === "teacher"){
+  //               router.push('/admin/dashboard');
+  //             } else if(userDocData.userType === "student"){
+  //               router.push('/student/dashboard');
+  //             }
+  //           }).catch(error => {
+  //             setError("server", {
+  //               type: "manual",
+  //               message: "We're experiencing an issue logging in currently",
+  //             });
+  //           });
+  //           // try {
+  //           //   console.log(authUser.user.uid)
+  //           //   let userDocData = await getUserDocData(authUser.user);
+  //           //   console.log("userDocData: " + userDocData);
+  //           //   setUserDocument(userDocData);
+  //           //   console.log("userDocData.userType " + userDocData.userType);
+  //           //   if(userDocData.userType === "teacher"){
+  //           //     router.push('/admin/dashboard');
+  //           //   } else if(userDocData.userType === "student"){
+  //           //     router.push('/student/dashboard');
+  //           //   }
+  //           // } catch (e) {
+  //           //   setError("server", {
+  //           //     type: "manual",
+  //           //     message: "We're experiencing an issue logging in currently",
+  //           //   });
+  //           // }
+  //       }).catch(error => {
+  //         console.log(error);
+  //         setError("server", {
+  //           type: "manual",
+  //           message: "Email/Password combination invalid",
+  //         });
+  //       });
+  // }
   // const onSubmit = handleSubmit(data => console.log("data"));
 
   return (
