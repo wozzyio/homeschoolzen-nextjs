@@ -5,12 +5,14 @@ const authUserContext = createContext({
     authUser: null,
     loading: true,
     userDoc: null,
+    teacherStudentDoc: null,
     signInWithEmailAndPassword: async () => {},
     createUserWithEmailAndPassword: async () => {},
     signOut: async () => {},
     setUserDocument : async () => {},
     getUserDocData : async () => {},
     addTeacherDocument : async () => {},
+    setStudentsDocAsTeacher: async () => {},
 });
 
 export function AuthUserProvider({ children }) {

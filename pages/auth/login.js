@@ -49,7 +49,7 @@ export default function Login() {
       console.log("authUser: "+ authUser);
       await sleep(2000);
       // set user doc local as in local to this file as far as the function is concered
-      let userDocData = await getUserDocData(authUser.user)
+      let userDocData = await getUserDocData(authUser.user);
       await sleep(1000);
       // set userDoc in global storage
       await setUserDocument(userDocData);

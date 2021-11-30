@@ -10,6 +10,7 @@ export default function useFirebaseAuth() {
     const [authUser, setAuthUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [userDoc, setUserDoc] = useState(null);
+    const [teacherStudentDoc, setTeacherStudentDoc] = useState(null);
 
     const authStateChanged = async (authState) => {
         console.log("innn authStateChanged");
@@ -23,6 +24,8 @@ export default function useFirebaseAuth() {
         setLoading(true)
         var formattedUser = formatAuthUser(authState);
         setAuthUser(formattedUser);
+        let token = await authState.getIdToken();
+        console.log("token: "+ token);
         setLoading(false);
     };
 
@@ -46,9 +49,11 @@ export default function useFirebaseAuth() {
     const createUserWithEmailAndPassword = (email, password) =>
         Firebase.auth().createUserWithEmailAndPassword(email, password);
 
-    const signOut = () =>
-        setUserDoc(null)
+    const signOut = () => {
+        setUserDoc(null);
+        setTeacherStudentDoc(null);
         Firebase.auth().signOut().then(clear);
+    }
     
     const addTeacherDocument = (user) => {
         Firebase.firestore().collection("users").doc(user.user.uid).set({
@@ -65,6 +70,18 @@ export default function useFirebaseAuth() {
     const getUserDocData = (user) =>
         Firebase.firestore().collection("users").doc(user.uid).get();
 
+    // const getStudentsAsTeacher = (userDoc) => {
+    //     // go thru each userDoc student ID grab the corresponding user data
+    //     // input that data into an array and return that array for usage
+    //     // for studentId in userDoc.studentUid:
+    //     studentDoc = [];
+    //     // check if userDoc student id is empty if its empty then just return empty array
+    // }
+
+    const setStudentsDocAsTeacher = (teacherStudentDocData) => {
+        setTeacherStudentDoc(teacherStudentDocData)
+    }
+
     useEffect(() => {
         const unsubscribe = Firebase.auth().onAuthStateChanged(authStateChanged);
         return () => unsubscribe();
@@ -74,16 +91,13 @@ export default function useFirebaseAuth() {
         authUser,
         loading,
         userDoc,
+        teacherStudentDoc,
         signInWithEmailAndPassword,
         createUserWithEmailAndPassword,
         signOut,
         setUserDocument,
         addTeacherDocument,
+        setStudentsDocAsTeacher,
         getUserDocData,
-    };
-
-    return {
-        authUser,
-        loading
     };
 }
